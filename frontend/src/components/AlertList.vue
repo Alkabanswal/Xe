@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAlertsStore } from '../stores/alerts'
 
 const store = useAlertsStore()
 const error = ref<string | null>(null)
+
+// Triggered alerts float to the top; sort is stable so each group keeps
+// its original creation order.
+const sortedAlerts = computed(() =>
+  [...store.alerts].sort((a, b) => Number(b.triggered) - Number(a.triggered)),
+)
 
 async function remove(id: string) {
   error.value = null
@@ -24,7 +30,7 @@ function currentRate(pair: string): string | null {
   <p v-if="!store.alerts.length" class="empty">No alerts yet — add one above.</p>
 
   <ul v-else class="alerts">
-    <li v-for="alert in store.alerts" :key="alert.id" :class="{ triggered: alert.triggered }">
+    <li v-for="alert in sortedAlerts" :key="alert.id" :class="{ triggered: alert.triggered }">
       <div class="detail">
         <span class="pair">{{ alert.pair }}</span>
         <span class="rule">

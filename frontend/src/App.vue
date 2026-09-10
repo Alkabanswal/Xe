@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import AlertForm from './components/AlertForm.vue'
 import AlertList from './components/AlertList.vue'
 import { useAlertsStore } from './stores/alerts'
 
 const store = useAlertsStore()
+
+const triggeredPairs = computed(() =>
+  store.triggeredAlerts.map((a) => a.pair).join(', '),
+)
 
 const cards = [
   { pair: 'USD/CAD', caption: '1 US dollar in Canadian dollars' },
@@ -30,6 +34,11 @@ onMounted(() => {
     </header>
 
     <p v-if="store.error" class="error" role="alert">{{ store.error }}</p>
+
+    <p v-if="store.triggeredCount" class="triggered-banner" role="status">
+      🔔 {{ store.triggeredCount }} {{ store.triggeredCount === 1 ? 'alert' : 'alerts' }} triggered
+      — {{ triggeredPairs }}
+    </p>
 
     <section class="cards">
       <div class="card" v-for="card in cards" :key="card.pair">
@@ -93,6 +102,17 @@ h1 {
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.triggered-banner {
+  background: #fff8e8;
+  border: 1px solid #f0a202;
+  color: #7a4f00;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
   margin-bottom: 16px;
 }
 
