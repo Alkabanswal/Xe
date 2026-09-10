@@ -21,7 +21,7 @@ test('renders the rate board and loads rates on mount', async () => {
     global: { plugins: [createPinia()] },
   })
 
-  expect(getByText('USD / CAD')).toBeTruthy()
+  expect(getByText('1 US dollar in Canadian dollars')).toBeTruthy()
   expect(await findByText('1.3650')).toBeTruthy()
   expect(api.getRates).toHaveBeenCalled()
   expect(api.getAlerts).toHaveBeenCalled()

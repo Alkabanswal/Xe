@@ -67,7 +67,7 @@ async function submit() {
       />
     </label>
 
-    <button type="submit" :disabled="!valid || submitting">
+    <button type="submit" class="btn btn--primary" :disabled="!valid || submitting">
       {{ submitting ? 'Adding…' : 'Add alert' }}
     </button>
 
@@ -80,44 +80,52 @@ async function submit() {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: 14px;
 }
 
 label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: #66718a;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xe-muted);
+}
+
+label:has(input) {
+  flex: 1;
+  min-width: 150px;
 }
 
 select,
 input {
-  padding: 8px 10px;
-  border: 1px solid #cdd4e0;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #dfe3ec;
+  border-radius: var(--xe-radius-sm);
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--xe-ink);
+  background: var(--xe-surface);
 }
 
-button {
-  padding: 9px 16px;
-  border: none;
-  border-radius: 6px;
-  background: #16345c;
-  color: #fff;
-  font-size: 0.9rem;
-  cursor: pointer;
+select:focus,
+input:focus {
+  outline: 2px solid var(--xe-blue);
+  outline-offset: 0;
+  border-color: transparent;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.alert-form .btn {
+  height: 44px;
 }
 
 .form-error {
   flex-basis: 100%;
   margin: 0;
-  color: #b42318;
+  color: var(--xe-danger);
   font-size: 0.85rem;
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useAlertsStore } from '../stores/alerts'
+import FlagIcon from './FlagIcon.vue'
 
 const store = useAlertsStore()
 const error = ref<string | null>(null)
@@ -27,7 +28,13 @@ async function remove(id: string) {
   <ul v-else class="alerts">
     <li v-for="alert in sortedAlerts" :key="alert.id" :class="{ triggered: alert.triggered }">
       <div class="detail">
-        <span class="pair">{{ alert.pair }}</span>
+        <span class="pair">
+          <span class="pair__flags">
+            <FlagIcon :currency="alert.pair.split('/')[0]" />
+            <FlagIcon :currency="alert.pair.split('/')[1]" />
+          </span>
+          {{ alert.pair }}
+        </span>
         <span class="rule">
           {{ alert.direction === 'above' ? 'above' : 'below' }} {{ alert.threshold }}
         </span>
@@ -45,7 +52,7 @@ async function remove(id: string) {
 
 <style scoped>
 .empty {
-  color: #8a93a8;
+  color: var(--xe-muted);
   font-size: 0.9rem;
 }
 
@@ -59,18 +66,31 @@ async function remove(id: string) {
 }
 
 li {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  background: #fff;
-  border: 1px solid #e1e6ee;
-  border-radius: 8px;
+  padding: 15px 18px;
+  background: var(--xe-surface);
+  border: 1px solid var(--xe-border);
+  border-radius: var(--xe-radius-sm);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 li.triggered {
-  border-color: #f0a202;
-  background: #fff8e8;
+  background: #eaf0ff; /* xe blue tint */
+  border-color: #a1bfff; /* xe blue-300 */
+  padding-left: 24px;
+}
+
+li.triggered::before {
+  content: '';
+  position: absolute;
+  inset-block: 10px;
+  left: 8px;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--xe-blue);
 }
 
 .detail {
@@ -82,47 +102,66 @@ li.triggered {
 }
 
 .pair {
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--xe-ink);
+}
+
+.pair__flags {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.pair__flags .flag {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .rule {
-  color: #66718a;
+  color: var(--xe-muted);
   font-size: 0.9rem;
 }
 
 .now {
-  color: #8a93a8;
+  color: var(--xe-muted);
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
 }
 
 .badge {
-  background: #f0a202;
-  color: #1a2233;
-  font-size: 0.75rem;
+  background: var(--xe-blue);
+  color: #ffffff;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 3px 8px;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
   border-radius: 999px;
+  text-transform: uppercase;
 }
 
 .delete {
-  border: 1px solid #cdd4e0;
-  background: #fff;
-  color: #66718a;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  border: 1px solid var(--xe-border);
+  background: var(--xe-surface);
+  color: var(--xe-muted);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .delete:hover {
-  border-color: #b42318;
-  color: #b42318;
+  border-color: var(--xe-danger);
+  color: var(--xe-danger);
 }
 
 .form-error {
   margin: 8px 0 0;
-  color: #b42318;
+  color: var(--xe-danger);
   font-size: 0.85rem;
 }
 </style>
