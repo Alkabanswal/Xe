@@ -19,11 +19,6 @@ async function remove(id: string) {
     error.value = e instanceof Error ? e.message : 'Could not delete alert.'
   }
 }
-
-function currentRate(pair: string): string | null {
-  const rate = store.rateFor(pair)
-  return rate === undefined ? null : rate.toFixed(4)
-}
 </script>
 
 <template>
@@ -36,7 +31,7 @@ function currentRate(pair: string): string | null {
         <span class="rule">
           {{ alert.direction === 'above' ? 'above' : 'below' }} {{ alert.threshold }}
         </span>
-        <span v-if="currentRate(alert.pair)" class="now">now {{ currentRate(alert.pair) }}</span>
+        <span v-if="alert.currentRate != null" class="now">now {{ alert.currentRate.toFixed(4) }}</span>
       </div>
 
       <span v-if="alert.triggered" class="badge" role="status">Triggered</span>

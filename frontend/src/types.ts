@@ -11,6 +11,8 @@ export interface Alert {
   pair: string
   threshold: number
   direction: Direction
+  /** The rate the backend evaluated `triggered` against. */
+  currentRate: number
   triggered: boolean
 }
 

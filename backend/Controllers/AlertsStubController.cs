@@ -40,6 +40,7 @@ public class AlertsStubController : ControllerBase
                     a.Pair,
                     a.Threshold,
                     a.Direction,
+                    CurrentRate = CannedRates[a.Pair],
                     Triggered = IsTriggered(a),
                 })
                 .ToList();
@@ -66,7 +67,17 @@ public class AlertsStubController : ControllerBase
             Alerts.Add(alert);
         }
 
-        return CreatedAtAction(nameof(List), new { alert.Id, alert.Pair, alert.Threshold, alert.Direction, Triggered = IsTriggered(alert) });
+        return CreatedAtAction(
+            nameof(List),
+            new
+            {
+                alert.Id,
+                alert.Pair,
+                alert.Threshold,
+                alert.Direction,
+                CurrentRate = CannedRates[alert.Pair],
+                Triggered = IsTriggered(alert),
+            });
     }
 
     [HttpDelete("{id:guid}")]
