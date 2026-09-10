@@ -4,9 +4,10 @@ import * as api from '../api'
 import type { Alert, CreateAlertInput, Rate } from '../types'
 
 /**
- * Holds the rate board and the user's alerts. Rates and alerts are refreshed
- * together because the backend computes each alert's `triggered` flag against
- * the latest rates, so a stale rate board would mean a stale trigger state.
+ * Holds the rate board and the user's alerts. `refresh` reloads both together
+ * (the backend recomputes each alert's `triggered` flag on read), but the two
+ * fetches are independent: if the rates API is down — the README warns it can
+ * be — the alerts list still loads, and vice versa.
  */
 export const useAlertsStore = defineStore('alerts', () => {
   const rates = ref<Rate[]>([])
@@ -25,16 +26,28 @@ export const useAlertsStore = defineStore('alerts', () => {
   async function refresh(): Promise<void> {
     loading.value = true
     error.value = null
-    try {
-      const [nextRates, nextAlerts] = await Promise.all([api.getRates(), api.getAlerts()])
-      rates.value = nextRates
-      alerts.value = nextAlerts
-      lastUpdated.value = new Date().toLocaleTimeString()
-    } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Something went wrong.'
-    } finally {
-      loading.value = false
+
+    const [ratesResult, alertsResult] = await Promise.allSettled([
+      api.getRates(),
+      api.getAlerts(),
+    ])
+
+    if (ratesResult.status === 'fulfilled') {
+      rates.value = ratesResult.value
     }
+    if (alertsResult.status === 'fulfilled') {
+      alerts.value = alertsResult.value
+    }
+
+    const failure = [ratesResult, alertsResult].find((r) => r.status === 'rejected')
+    if (failure && failure.status === 'rejected') {
+      error.value =
+        failure.reason instanceof Error ? failure.reason.message : 'Could not refresh.'
+    } else {
+      lastUpdated.value = new Date().toLocaleTimeString()
+    }
+
+    loading.value = false
   }
 
   async function addAlert(input: CreateAlertInput): Promise<Alert> {
