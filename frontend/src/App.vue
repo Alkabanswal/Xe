@@ -1,78 +1,53 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { state } from './state'
+import AlertForm from './components/AlertForm.vue'
+import AlertList from './components/AlertList.vue'
+import { useAlertsStore } from './stores/alerts'
 
-function loadRates() {
-  fetch('/api/rates')
-    .then((r) => r.json())
-    .then((data) => {
-      state.rates = data
-      state.lastUpdated = new Date().toLocaleTimeString()
-    })
-}
+const store = useAlertsStore()
 
-function getUsdCad() {
-  for (let i = 0; i < state.rates.length; i++) {
-    if (state.rates[i].pair === 'USD/CAD') {
-      return state.rates[i].rate.toFixed(4)
-    }
-  }
-  return '...'
-}
+const cards = [
+  { pair: 'USD/CAD', caption: '1 US dollar in Canadian dollars' },
+  { pair: 'GBP/USD', caption: '1 British pound in US dollars' },
+  { pair: 'EUR/USD', caption: '1 euro in US dollars' },
+]
 
-function getGbpUsd() {
-  for (let i = 0; i < state.rates.length; i++) {
-    if (state.rates[i].pair === 'GBP/USD') {
-      return state.rates[i].rate.toFixed(4)
-    }
-  }
-  return '...'
-}
-
-function getEurUsd() {
-  for (let i = 0; i < state.rates.length; i++) {
-    if (state.rates[i].pair === 'EUR/USD') {
-      return state.rates[i].rate.toFixed(4)
-    }
-  }
-  return '...'
+function display(pair: string): string {
+  const rate = store.rateFor(pair)
+  return rate === undefined ? '…' : rate.toFixed(4)
 }
 
 onMounted(() => {
-  loadRates()
+  store.refresh()
 })
-
-defineExpose({ loadRates })
 </script>
 
 <template>
   <main class="page">
     <header class="header">
       <h1>Xe Rate Board</h1>
-      <span class="updated" v-if="state.lastUpdated">Last updated {{ state.lastUpdated }}</span>
+      <span class="updated" v-if="store.lastUpdated">Last updated {{ store.lastUpdated }}</span>
     </header>
 
+    <p v-if="store.error" class="error" role="alert">{{ store.error }}</p>
+
     <section class="cards">
-      <div class="card">
-        <div class="pair">USD / CAD</div>
-        <div class="rate">{{ getUsdCad() }}</div>
-        <div class="caption">1 US dollar in Canadian dollars</div>
-      </div>
-
-      <div class="card">
-        <div class="pair">GBP / USD</div>
-        <div class="rate">{{ getGbpUsd() }}</div>
-        <div class="caption">1 British pound in US dollars</div>
-      </div>
-
-      <div class="card">
-        <div class="pair">EUR / USD</div>
-        <div class="rate">{{ getEurUsd() }}</div>
-        <div class="caption">1 euro in US dollars</div>
+      <div class="card" v-for="card in cards" :key="card.pair">
+        <div class="pair">{{ card.pair.replace('/', ' / ') }}</div>
+        <div class="rate">{{ display(card.pair) }}</div>
+        <div class="caption">{{ card.caption }}</div>
       </div>
     </section>
 
-    <button class="refresh" @click="loadRates()">Refresh rates</button>
+    <button class="refresh" :disabled="store.loading" @click="store.refresh()">
+      {{ store.loading ? 'Refreshing…' : 'Refresh rates' }}
+    </button>
+
+    <section class="alerts-section">
+      <h2>Rate alerts</h2>
+      <AlertForm />
+      <AlertList />
+    </section>
   </main>
 </template>
 
@@ -109,6 +84,16 @@ h1 {
 .updated {
   font-size: 0.85rem;
   color: #66718a;
+}
+
+.error {
+  background: #fdecea;
+  border: 1px solid #f5c2bd;
+  color: #b42318;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
 }
 
 .cards {
@@ -156,5 +141,23 @@ h1 {
 
 .refresh:hover {
   background: #1d4377;
+}
+
+.refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alerts-section {
+  margin-top: 40px;
+}
+
+.alerts-section h2 {
+  font-size: 1.2rem;
+  margin: 0 0 16px;
+}
+
+.alerts-section .alert-form {
+  margin-bottom: 20px;
 }
 </style>

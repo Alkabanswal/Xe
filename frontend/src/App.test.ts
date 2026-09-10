@@ -1,52 +1,33 @@
 import { render } from '@testing-library/vue'
-import { mount } from '@vue/test-utils'
-import { vi, test, expect } from 'vitest'
-
-const fakeState = vi.hoisted(() => ({
-  rates: [
-    { pair: 'USD/CAD', rate: 1.3 },
-    { pair: 'GBP/USD', rate: 1.25 },
-    { pair: 'EUR/USD', rate: 1.1 },
-  ] as any[],
-  lastUpdated: '',
-}))
-vi.mock('./state', () => ({ state: fakeState }))
-
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, expect, test, vi } from 'vitest'
+import * as api from './api'
 import App from './App.vue'
 
-test('shows the cards and pokes state', async () => {
-  const fetchSpy = vi.fn(() =>
-    Promise.resolve({ json: () => Promise.resolve([{ pair: 'USD/CAD', rate: 9.9 }]) }),
-  )
-  ;(globalThis as any).fetch = fetchSpy
+vi.mock('./api')
 
-  const { getByText, container } = render(App)
+beforeEach(() => {
+  setActivePinia(createPinia())
+  vi.mocked(api.getRates).mockResolvedValue([
+    { pair: 'USD/CAD', rate: 1.365, asOf: '2026-01-01T00:00:00Z' },
+    { pair: 'GBP/USD', rate: 1.271, asOf: '2026-01-01T00:00:00Z' },
+    { pair: 'EUR/USD', rate: 1.083, asOf: '2026-01-01T00:00:00Z' },
+  ])
+  vi.mocked(api.getAlerts).mockResolvedValue([])
+})
+
+test('renders the rate board and loads rates on mount', async () => {
+  const { findByText, getByText } = render(App, {
+    global: { plugins: [createPinia()] },
+  })
 
   expect(getByText('USD / CAD')).toBeTruthy()
-  expect(getByText('1.3000')).toBeTruthy()
+  expect(await findByText('1.3650')).toBeTruthy()
+  expect(api.getRates).toHaveBeenCalled()
+  expect(api.getAlerts).toHaveBeenCalled()
+})
 
-  fakeState.rates[1].rate = 1.2599
-  await Promise.resolve()
-  const rates = container.querySelectorAll('.rate')
-
-  expect(getByText('GBP / USD')).toBeTruthy()
-  expect(getByText('EUR / USD')).toBeTruthy()
-  expect(getByText('1.1000')).toBeTruthy()
-  expect(fetchSpy).toHaveBeenCalledWith('/api/rates')
-  expect(rates.length).toBe(3)
-
-  await new Promise((r) => setTimeout(r, 0))
-  expect(fakeState.rates).toEqual([{ pair: 'USD/CAD', rate: 9.9 }])
-  expect(fakeState.lastUpdated).not.toBe('')
-
-  fakeState.lastUpdated = ''
-  const fetchSpy2 = vi.fn(() =>
-    Promise.resolve({ json: () => Promise.resolve([{ pair: 'GBP/USD', rate: 7.7 }]) }),
-  )
-  ;(globalThis as any).fetch = fetchSpy2
-  const wrapper = mount(App)
-  ;(wrapper.vm as any).loadRates()
-  await new Promise((r) => setTimeout(r, 0))
-  expect(fakeState.rates).toEqual([{ pair: 'GBP/USD', rate: 7.7 }])
-  expect(fakeState.lastUpdated).not.toBe('')
+test('shows the empty state when there are no alerts', async () => {
+  const { findByText } = render(App, { global: { plugins: [createPinia()] } })
+  expect(await findByText('No alerts yet — add one above.')).toBeTruthy()
 })
